@@ -11,12 +11,12 @@ import globalPluginHandler
 import ui
 import api
 import scriptHandler
-from . import psutil
+from . import psutil, wmi
 import addonHandler
 addonHandler.initTranslation()
 
 # Styles of size calculation/string composition, do not change!
-# Treditional style, Y, K, M, G, B, ...
+# Traditional style, Y, K, M, G, B, ...
 traditional = [
 	(1024.0**8.0, 'Y'),
 	(1024.0**7.0, 'Z'),
@@ -105,7 +105,7 @@ def tryTrunk(n):
 
 # Moved from battery module to the main module in 2019 (code provided by Alex Hall)
 def _batteryInfo(verbose=False):
-	# Returns current battery status provided that the computer has a detectable battery.
+	# Returns current battery status, provided that the computer has a detectable battery.
 	# The verbose argument will force this function to return something if there is no battery.
 	info = None
 	# Uses psutil.sensors_battery function except it also checks battery low/critical flags.
@@ -253,11 +253,44 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			ui.message(info)
 		else:
 			if api.copyToClip(info): ui.message(self.RMCopyMessage)
+	
+	@scriptHandler.script(
+		description=_("presents the CPU temperature and voltage"),
+		gestures=["KB:NVDA+shift+5"]
+	)
+	def script_presentCPUTemp(self, gesture):
+		SENSOR_TYPE_CLOCK = u'Clock'
+		SENSOR_TYPE_LOAD = u'Load'
+		SENSOR_TYPE_POWER = u'Power'
+		SENSOR_TYPE_TEMPERATURE = u'Temperature'
+		decimalPlaces = 1
+		wmiResource = wmi.WMI(namespace="root\OpenHardwareMonitor")
+		sensors = wmiResource.Sensor()
+		cpuData = {}
+		for sensor in sensors:
+			if not sensor.Name.startswith("CPU"):
+				continue
+			key = sensor.Name[len("CPU "):]
+			if not key in cpuData:
+				cpuData[key] = {}
+			cpuData[key][sensor.SensorType] = sensor.Value
+		cpuLoad = round(float(cpuData["Total"][SENSOR_TYPE_LOAD]), decimalPlaces)
+		cpuTemp = round(float(cpuData["Package"][SENSOR_TYPE_TEMPERATURE]), decimalPlaces)
+		cpuPower = round(float(cpuData["Package"][SENSOR_TYPE_POWER]), decimalPlaces)
+		info = "CPU at {temp}C, {load}% load, {voltage}V".format(
+			temp=cpuTemp,
+			load=cpuLoad,
+			voltage=cpuPower
+		)
+		if scriptHandler.getLastScriptRepeatCount() == 0:
+			ui.message(info)
+		else:
+			if api.copyToClip(info): ui.message(self.RMCopyMessage)
 
 	@scriptHandler.script(
 		# Translators: Input help mode message about memory info command in Resource Monitor.
 		description=_("Presents the used and total space for both physical and virtual ram."),
-		gestures=["KB:NVDA+shift+2", "KB:NVDA+shift+5"]
+		gestures=["KB:NVDA+shift+2"]
 	)
 	def script_announceRamInfo(self, gesture):
 		ram = psutil.virtual_memory()
