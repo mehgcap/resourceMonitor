@@ -264,8 +264,13 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		SENSOR_TYPE_POWER = u'Power'
 		SENSOR_TYPE_TEMPERATURE = u'Temperature'
 		decimalPlaces = 1
-		wmiResource = wmi.WMI(namespace="root\OpenHardwareMonitor")
-		sensors = wmiResource.Sensor()
+		try:
+			wmiResource = wmi.WMI(namespace="root\OpenHardwareMonitor")
+			sensors = wmiResource.Sensor()
+			if len(sensors) == 0:
+				raise Exception("No information found. Make sure Open Hardware Monitor is running.")
+		except Exception as err:
+			ui.message(_("Error getting the CPU details. Details: " + str(err)))
 		cpuData = {}
 		for sensor in sensors:
 			if not sensor.Name.startswith("CPU"):
