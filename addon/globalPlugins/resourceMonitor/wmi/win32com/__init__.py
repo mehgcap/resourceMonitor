@@ -2,7 +2,8 @@
 # Initialization for the win32com package
 #
 
-import win32api, sys, os
+import sys, os
+from win32 import win32api
 import pythoncom
 
 # flag if we are in a "frozen" build.

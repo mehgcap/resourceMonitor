@@ -11,8 +11,12 @@ import globalPluginHandler
 import ui
 import api
 import scriptHandler
-from . import psutil, wmi
+from . import psutil
 import addonHandler
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'wmi')))
+import wmi
+del sys.path[-1]
+
 addonHandler.initTranslation()
 
 # Styles of size calculation/string composition, do not change!
