@@ -14,9 +14,10 @@ import scriptHandler
 from . import psutil
 import addonHandler
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'wmi')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'wmi', 'win32')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'wmi', 'win32', 'lib')))
 import wmi
-del sys.path[-1]
-
+del sys.path[-3:]
 addonHandler.initTranslation()
 
 # Styles of size calculation/string composition, do not change!
